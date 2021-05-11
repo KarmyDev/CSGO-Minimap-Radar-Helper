@@ -12,7 +12,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="default_image.png" />
+    <Resource Include="Resources\default_image.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Windows\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Page Include="App.xaml" />
   </ItemGroup>
 
 </Project>

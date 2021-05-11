@@ -8,7 +8,17 @@
         Title="CSGO Minimap Radar Helper" Height="579" Width="1242" WindowStyle="ToolWindow" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
 
     <Window.Resources>
-        
+
+        <Style x:Key="FocusVisual">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Rectangle Margin="2" SnapsToDevicePixels="true" Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" StrokeThickness="1" StrokeDashArray="1 2"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="DefaultButtonStyle" TargetType="{x:Type Button}">
             <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}"/>
             <Setter Property="Background" Value="#FF444444"/>
@@ -58,10 +68,10 @@
         </Grid.ColumnDefinitions>
         <Button Content="Load radar image" Style="{StaticResource DefaultButtonStyle}" HorizontalAlignment="Center" Margin="0,26,0,0" VerticalAlignment="Top" Width="134" Click="OnLoadRadarClick" Height="20"/>
 
-        <Image x:Name="RadarImage" Cursor="Arrow" ImageFailed="RadarImage_ImageFailed"  Grid.Column="1" StretchDirection="Both" HorizontalAlignment="Center" VerticalAlignment="Center" Height="512" Width="512" Source="/default_image.png" MouseLeftButtonDown="OnRadarImageClick"/>
+        <Image x:Name="RadarImage" Cursor="Arrow" ImageFailed="RadarImage_ImageFailed"  Grid.Column="1" StretchDirection="Both" HorizontalAlignment="Center" VerticalAlignment="Center" Height="512" Width="512" Source="/Resources/default_image.png" MouseLeftButtonDown="OnRadarImageClick"/>
         <Label Content="Radar config output" Grid.Column="2" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" FontWeight="Bold" Foreground="White"/>
 
-        <TextBox x:Name="RadarOutput" AcceptsReturn="True" IsReadOnly="False" Grid.Column="2" Margin="10,41,28,25" TextWrapping="Wrap" Background="#FFD8D7D6" Padding="15,15,20,15" FontFamily="Consolas" BorderBrush="Black" SelectionBrush="Black"/>
+        <TextBox x:Name="RadarOutput" AcceptsReturn="False" IsReadOnly="False" Grid.Column="2" Margin="10,41,28,25" TextWrapping="Wrap" Background="#FFD8D7D6" Padding="15,15,20,15" FontFamily="Consolas" BorderBrush="Black" SelectionBrush="Black"/>
         <Rectangle Grid.Column="2" HorizontalAlignment="Left" Margin="10,46,0,30" Width="5" Fill="#FF666666" />
     </Grid>
 </Window>
