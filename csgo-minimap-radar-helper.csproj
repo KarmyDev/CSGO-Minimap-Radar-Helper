@@ -5,6 +5,8 @@
     <TargetFramework>net5.0-windows</TargetFramework>
     <RootNamespace>csgo_minimap_radar_helper</RootNamespace>
     <UseWPF>true</UseWPF>
+    <Configurations>Debug;Release;Publish</Configurations>
+    <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
 
   <ItemGroup>
