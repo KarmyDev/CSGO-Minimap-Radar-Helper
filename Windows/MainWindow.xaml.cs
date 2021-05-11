@@ -1,6 +1,8 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -53,6 +55,12 @@ namespace csgo_minimap_radar_helper
             radarMarkerButtons.Add(hostage3_button);
             radarMarkerButtons.Add(hostage4_button);
             radarMarkerButtons.Add(hostage5_button);
+
+            MapName.Text = "de_fault";
+            TextureFileName.Text = "overviews/de_fault";
+            ConsoleOverviewInput.Text = "Overview: scale 0.00, pos_x 0, pos_y 0";
+
+            UpdateRadarConfigOutput();
         }
 
         private void OnLoadRadarClick(object sender, RoutedEventArgs e)
@@ -62,7 +70,9 @@ namespace csgo_minimap_radar_helper
             {
                 try
                 {
+                    FileInfo file = new FileInfo(dial.FileName);
                     RadarImage.Source = new BitmapImage(new Uri(dial.FileName));
+                    if (file.Name.Contains('.')) TextureFileName.Text = $"overviews/{file.Name.Split('.')[0]}";
                 }
                 catch (Exception)
                 {
@@ -74,12 +84,17 @@ namespace csgo_minimap_radar_helper
         private void OnRadarImageClick(object sender, MouseButtonEventArgs e)
         {
             RadarImage.Cursor = Cursors.Arrow;
+
             if (lastSelectedButton == null) return;
             if (string.IsNullOrEmpty(lastSelectedButton.Name)) return;
+
             lastSelectedButtonName = "Update";
             UpdateEverySelectionButtonState();
 
             string markerName = GetMarkerNameByItsButtonName(lastSelectedButton.Name);
+
+            if (radarMarkers[markerName].IsSet) RadarCanvas.Children.Remove(radarMarkers[markerName].OnScreenImage);
+
             Image imgObject = new();
 
             string defResImg = markerName;
@@ -92,31 +107,28 @@ namespace csgo_minimap_radar_helper
                 case "hostage4":
                 case "hostage5":
                     defResImg = "hostage";
-                break;
+                    break;
             }
+
+            var pos = e.GetPosition(RadarCanvas);
 
             imgObject.Source = defaultResourceImages[defResImg];
             imgObject.Width = 50;
             imgObject.Height = 50;
 
-            Canvas.SetLeft(imgObject, (RadarCanvas.Width / 2) - imgObject.Width / 2);
-            Canvas.SetTop(imgObject, (RadarCanvas.Height / 2) - imgObject.Height / 2);
+            Canvas.SetLeft(imgObject, pos.X - imgObject.Width / 2);
+            Canvas.SetTop(imgObject, pos.Y - imgObject.Height / 2);
 
             radarMarkers[markerName] = new RadarMarker(
                 true,
-                imgObject.Width,
-                imgObject.Height,
+                pos.X,
+                pos.Y,
                 imgObject
             );
-            // [THIS GUD CODE BUT DISABLED FOR DEBUG]
             RadarCanvas.Children.Add(imgObject);
-           
-            Label myText = new()
-            {
-                Content = $"X: {RadarCanvas.Width} Y: {RadarCanvas.Height}"
-            };
-            RadarCanvas.Children.Add(myText);
-            
+            lastSelectedButton = null;
+            lastSelectedButtonName = null;
+            UpdateRadarConfigOutput();
         }
 
         private void RadarImage_ImageFailed(object sender, ExceptionRoutedEventArgs e)
@@ -190,6 +202,7 @@ namespace csgo_minimap_radar_helper
                 RadarImage.Cursor = Cursors.Arrow;
                 ((Button)sender).Content = lastSelectedButtonName;
 
+                lastSelectedButton = null;
                 lastSelectedButtonName = null;
             }
             else
@@ -204,15 +217,6 @@ namespace csgo_minimap_radar_helper
             }
         }
 
-        private void OnCancelSelectingRadar_Click(object sender, ExceptionRoutedEventArgs e)
-        {
-            RadarImage.Cursor = Cursors.Arrow;
-
-            ((Button)sender).Content = "Select";
-
-            lastSelectedButton = null;
-        }
-
         private void OnRestartRadarMarker_Click(object sender, RoutedEventArgs e)
         {
             Button desiredMainButton = GetMainButtonByItsRestartButton(((Button)sender).Name);
@@ -224,6 +228,7 @@ namespace csgo_minimap_radar_helper
             {
                 lastSelectedButtonName = "Add";
             }
+            UpdateRadarConfigOutput();
         }
 
         public Dictionary<string, RadarMarker> radarMarkers = new()
@@ -240,7 +245,7 @@ namespace csgo_minimap_radar_helper
             { "hostage5", new RadarMarker() }
         };
 
-        public struct RadarMarker 
+        public struct RadarMarker
         {
             public bool IsSet { get; set; }
             public double XPoint { get; set; }
@@ -255,6 +260,106 @@ namespace csgo_minimap_radar_helper
                 YPoint = y;
                 OnScreenImage = image;
             }
+        }
+
+        private void OnTextInputDataChanged(object sender, TextChangedEventArgs e)
+        {
+            UpdateRadarConfigOutput();
+        }
+
+        private void UpdateRadarConfigOutput()
+        {
+            string finalGeneratedData = "// Radar data generated by Karmel's CSGO Minimap radar helper\n\n";
+            string finalOverview = string.Empty;
+
+            string[] globalProcess = ConsoleOverviewInput.Text.Split(',');
+
+            bool hitAnyErrorWithOverview = false;
+
+            if (string.IsNullOrWhiteSpace(MapName.Text))
+            {
+                finalGeneratedData = "// Cannot generate radar config file without knowing the map name.\n// Please input the map name to proceed.";
+                RadarOutput.Text = $"// ===[generator errors]=======================\n{finalGeneratedData}\n// ============================================";
+                return;
+            }
+            if (string.IsNullOrWhiteSpace(TextureFileName.Text))
+            {
+                finalGeneratedData = "// Cannot generate radar config file without knowing the texture file name.\n// Please input the texture file name to proceed.";
+                RadarOutput.Text = $"// ===[generator errors]=======================\n{finalGeneratedData}\n// ============================================";
+                return;
+            }
+
+            finalGeneratedData += $"\"{MapName.Text.Replace(' ', '_')}\"\n{{\n";
+            finalGeneratedData += $"\t\"material\" \"{TextureFileName.Text.Replace(' ', '_')}\"\n";
+
+            
+
+            if (globalProcess.Length >= 3)
+            {
+                string[] preProcess = globalProcess[1].Split();
+
+                if (preProcess.Length >= 2)
+                {
+                    if (preProcess[1] == "pos_x")
+                    {
+                        finalOverview += $"\t\"pos_x\" \"{preProcess[2]}\"\n";
+                    }
+                    else hitAnyErrorWithOverview = true;
+                }
+                else hitAnyErrorWithOverview = true;
+
+                preProcess = globalProcess[2].Split();
+
+                if (preProcess.Length >= 2)
+                {
+                    if (preProcess[1] == "pos_y")
+                    {
+                        finalOverview += $"\t\"pos_y\" \"{preProcess[2]}\"\n";
+                    }
+                    else hitAnyErrorWithOverview = true;
+                }
+                else hitAnyErrorWithOverview = true;
+
+                preProcess = globalProcess[0].Split();
+
+                if (preProcess[1] == "scale")
+                {
+                    finalOverview += $"\t\"scale\" \"{preProcess[2]}\"\n";
+                }
+                else hitAnyErrorWithOverview = true;
+            }
+
+            if (hitAnyErrorWithOverview)
+            {
+                finalGeneratedData += "\n// ====[console overview error]===========\n// Cannot read data from Console Overview\n// =======================================\n";
+            }
+            else
+            {
+                finalGeneratedData += finalOverview;
+            }
+
+            RadarMarker thisRM = radarMarkers["ct_spawn"];
+            if (thisRM.IsSet) finalGeneratedData += $"\t\"CTSpawn_x\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.XPoint / RadarCanvas.Width)}\"\n";
+            if (thisRM.IsSet) finalGeneratedData += $"\t\"CTSpawn_y\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.YPoint / RadarCanvas.Height)}\"\n";
+
+            thisRM = radarMarkers["t_spawn"];
+            if (thisRM.IsSet) finalGeneratedData += $"\t\"TSpawn_x\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.XPoint / RadarCanvas.Width)}\"\n";
+            if (thisRM.IsSet) finalGeneratedData += $"\t\"TSpawn_y\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.YPoint / RadarCanvas.Height)}\"\n";
+
+            finalGeneratedData += "\n";
+
+            thisRM = radarMarkers["bomb_a"];
+            if (thisRM.IsSet) finalGeneratedData += $"\t\"bombA_x\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.XPoint / RadarCanvas.Width)}\"\n";
+            if (thisRM.IsSet) finalGeneratedData += $"\t\"bombA_y\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.YPoint / RadarCanvas.Height)}\"\n";
+
+            foreach (int i in Enumerable.Range(1, 5))
+            {
+                thisRM = radarMarkers["hostage" + i];
+                if (thisRM.IsSet) finalGeneratedData += $"\t\"Hostage{i}_x\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.XPoint / RadarCanvas.Width)}\"\n";
+                if (thisRM.IsSet) finalGeneratedData += $"\t\"Hostage{i}_y\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.YPoint / RadarCanvas.Height)}\"\n";
+            }
+
+            RadarOutput.Text = $"{finalGeneratedData}\n}}";
         }
     }
 }
