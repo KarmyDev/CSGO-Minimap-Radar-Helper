@@ -9,10 +9,20 @@
 
   <ItemGroup>
     <None Remove="default_image.png" />
+    <None Remove="Resources\bomb_a.png" />
+    <None Remove="Resources\bomb_b.png" />
+    <None Remove="Resources\ct_spawn.png" />
+    <None Remove="Resources\hostage.png" />
+    <None Remove="Resources\t_spawn.png" />
   </ItemGroup>
 
   <ItemGroup>
+    <Resource Include="Resources\bomb_a.png" />
+    <Resource Include="Resources\bomb_b.png" />
+    <Resource Include="Resources\ct_spawn.png" />
     <Resource Include="Resources\default_image.png" />
+    <Resource Include="Resources\hostage.png" />
+    <Resource Include="Resources\t_spawn.png" />
   </ItemGroup>
 
   <ItemGroup>

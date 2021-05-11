@@ -4,6 +4,5 @@
              xmlns:local="clr-namespace:csgo_minimap_radar_helper"
              StartupUri="Windows/MainWindow.xaml">
     <Application.Resources>
-         
     </Application.Resources>
 </Application>
