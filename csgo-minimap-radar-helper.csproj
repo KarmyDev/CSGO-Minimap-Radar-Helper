@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net5.0-windows</TargetFramework>
+    <RootNamespace>csgo_minimap_radar_helper</RootNamespace>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="default_image.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="default_image.png" />
+  </ItemGroup>
+
+</Project>
