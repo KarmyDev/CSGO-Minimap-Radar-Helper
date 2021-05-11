@@ -18,6 +18,20 @@ using System.Windows.Shapes;
 
 namespace csgo_minimap_radar_helper
 {
+    // -- Uselfull thingy --
+    public static class StringWorker
+    {
+        public static string TrimFromEnd(this string input, string suffixToRemove, StringComparison comparisonType = StringComparison.CurrentCulture)
+        {
+            if (suffixToRemove != null && input.EndsWith(suffixToRemove, comparisonType))
+            {
+                return input.Substring(0, input.Length - suffixToRemove.Length);
+            }
+
+            return input;
+        }
+    }
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -72,7 +86,11 @@ namespace csgo_minimap_radar_helper
                 {
                     FileInfo file = new FileInfo(dial.FileName);
                     RadarImage.Source = new BitmapImage(new Uri(dial.FileName));
-                    if (file.Name.Contains('.')) TextureFileName.Text = $"overviews/{file.Name.Split('.')[0]}";
+                    if (file.Name.Contains('.'))
+                    {
+                        MapName.Text = StringWorker.TrimFromEnd(file.Name.Split('.')[0], "_radar");
+                        TextureFileName.Text = $"overviews/{StringWorker.TrimFromEnd(file.Name.Split('.')[0], "_radar")}";
+                    }
                 }
                 catch (Exception)
                 {
@@ -115,6 +133,7 @@ namespace csgo_minimap_radar_helper
             imgObject.Source = defaultResourceImages[defResImg];
             imgObject.Width = 50;
             imgObject.Height = 50;
+            imgObject.IsHitTestVisible = false;
 
             Canvas.SetLeft(imgObject, pos.X - imgObject.Width / 2);
             Canvas.SetTop(imgObject, pos.Y - imgObject.Height / 2);
@@ -335,22 +354,26 @@ namespace csgo_minimap_radar_helper
             }
             else
             {
-                finalGeneratedData += finalOverview;
+                finalGeneratedData += $"{finalOverview}\n\t\"rotate\" \"0\"\n\t\"zoom\" \"0\"\n";
             }
 
             RadarMarker thisRM = radarMarkers["ct_spawn"];
-            if (thisRM.IsSet) finalGeneratedData += $"\t\"CTSpawn_x\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.XPoint / RadarCanvas.Width)}\"\n";
+            if (thisRM.IsSet) finalGeneratedData += $"\n\t\"CTSpawn_x\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.XPoint / RadarCanvas.Width)}\"\n";
             if (thisRM.IsSet) finalGeneratedData += $"\t\"CTSpawn_y\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.YPoint / RadarCanvas.Height)}\"\n";
 
             thisRM = radarMarkers["t_spawn"];
             if (thisRM.IsSet) finalGeneratedData += $"\t\"TSpawn_x\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.XPoint / RadarCanvas.Width)}\"\n";
             if (thisRM.IsSet) finalGeneratedData += $"\t\"TSpawn_y\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.YPoint / RadarCanvas.Height)}\"\n";
 
-            finalGeneratedData += "\n";
-
             thisRM = radarMarkers["bomb_a"];
-            if (thisRM.IsSet) finalGeneratedData += $"\t\"bombA_x\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.XPoint / RadarCanvas.Width)}\"\n";
+            if (thisRM.IsSet) finalGeneratedData += $"\n\t\"bombA_x\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.XPoint / RadarCanvas.Width)}\"\n";
             if (thisRM.IsSet) finalGeneratedData += $"\t\"bombA_y\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.YPoint / RadarCanvas.Height)}\"\n";
+
+            thisRM = radarMarkers["bomb_b"];
+            if (thisRM.IsSet) finalGeneratedData += $"\n\t\"bombB_x\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.XPoint / RadarCanvas.Width)}\"\n";
+            if (thisRM.IsSet) finalGeneratedData += $"\t\"bombB_y\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.YPoint / RadarCanvas.Height)}\"\n";
+
+            finalGeneratedData += "\n";
 
             foreach (int i in Enumerable.Range(1, 5))
             {
@@ -359,7 +382,7 @@ namespace csgo_minimap_radar_helper
                 if (thisRM.IsSet) finalGeneratedData += $"\t\"Hostage{i}_y\" \"{String.Format(CultureInfo.InvariantCulture, "{0:F2}", thisRM.YPoint / RadarCanvas.Height)}\"\n";
             }
 
-            RadarOutput.Text = $"{finalGeneratedData}\n}}";
+            RadarOutput.Text = $"{finalGeneratedData}}}";
         }
     }
 }
